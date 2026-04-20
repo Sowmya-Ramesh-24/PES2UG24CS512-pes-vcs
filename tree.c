@@ -8,13 +8,17 @@
 //
 // Example single entry (conceptual):
 //   "100644 hello.txt\0" followed by 32 raw bytes of SHA-256
-
+#include "index.h"
+// forward declaration
+#include "pes.h"
 #include "tree.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+
+int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 
 // ─── Mode Constants ─────────────────────────────────────────────────────────
 
@@ -86,6 +90,7 @@ static int compare_tree_entries(const void *a, const void *b) {
 // Serialize a Tree struct into binary format for storage.
 // Caller must free(*data_out).
 // Returns 0 on success, -1 on error.
+
 int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
     // Estimate max size: (6 bytes mode + 1 byte space + 256 bytes name + 1 byte null + 32 bytes hash) per entry
     size_t max_size = tree->count * 296; 
@@ -146,7 +151,7 @@ static int write_tree_level(const IndexEntry *entries, int count,
             TreeEntry *te = &tree.entries[tree.count++];
 
             te->mode = MODE_FILE;
-            te->hash = entries[i].id;
+            te->hash = entries[i].hash;
 
             strncpy(te->name, rel, sizeof(te->name) - 1);
             te->name[sizeof(te->name) - 1] = '\0';
@@ -156,10 +161,10 @@ static int write_tree_level(const IndexEntry *entries, int count,
         else {
     size_t dir_name_len = slash - rel;
 
-    char dir_name[256];
-    memcpy(dir_name, rel, dir_name_len);
-    dir_name[dir_name_len] = '\0';
-
+   char dir_name[256];
+if (dir_name_len >= sizeof(dir_name)) return -1;
+memcpy(dir_name, rel, dir_name_len);
+dir_name[dir_name_len] = '\0';
     char sub_prefix[512];
     snprintf(sub_prefix, sizeof(sub_prefix), "%s%s/", prefix, dir_name);
 
@@ -185,8 +190,21 @@ te->name[sizeof(te->name) - 1] = '\0';
 }
     }
 
-    return 0;
+    void *data;
+size_t data_len;
+
+if (tree_serialize(&tree, &data, &data_len) != 0) return -1;
+
+int rc = object_write(OBJ_TREE, data, data_len, id_out);
+free(data);
+
+return rc;
 }
+static int compare_index_by_path(const void *a, const void *b) {
+    return strcmp(((const IndexEntry *)a)->path,
+                  ((const IndexEntry *)b)->path);
+}
+
 int tree_from_index(ObjectID *id_out) {
     Index index;
 
@@ -198,8 +216,4 @@ int tree_from_index(ObjectID *id_out) {
     return write_tree_level(index.entries, index.count, "", id_out);
     }
     
-static int compare_index_by_path(const void *a, const void *b) {
-    return strcmp(((const IndexEntry *)a)->path,
-                  ((const IndexEntry *)b)->path);
-}
 
