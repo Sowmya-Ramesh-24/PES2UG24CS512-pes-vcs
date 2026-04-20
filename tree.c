@@ -129,6 +129,18 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 //   - object_write    : save that binary buffer to the store as OBJ_TREE
 //
 // Returns 0 on success, -1 on error.
+static int write_tree_level(const IndexEntry *entries, int count,
+                             const char *prefix, ObjectID *id_out) {
+    Tree tree;
+    tree.count = 0;
+
+    (void)entries;
+    (void)count;
+    (void)prefix;
+    (void)id_out;
+
+    return 0;
+}
 int tree_from_index(ObjectID *id_out) {
     Index index;
 
@@ -137,10 +149,11 @@ int tree_from_index(ObjectID *id_out) {
     qsort(index.entries, index.count,
           sizeof(IndexEntry), compare_index_by_path);
 
-    (void)id_out;
-    return 0;
-}
+    return write_tree_level(index.entries, index.count, "", id_out);
+    }
+    
 static int compare_index_by_path(const void *a, const void *b) {
     return strcmp(((const IndexEntry *)a)->path,
                   ((const IndexEntry *)b)->path);
 }
+
