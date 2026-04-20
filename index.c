@@ -134,11 +134,44 @@ int index_status(const Index *index) {
 //   - hex_to_hash                      : converting the parsed string to ObjectID
 //
 // Returns 0 on success, -1 on error.
-int index_load(Index *index) {
-    // TODO: Implement index loading
-    // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+int index_load(Index *idx) {
+    FILE *f = fopen(".pes/index", "r");
+
+    if (!f) {
+        idx->count = 0;
+        idx->entries = NULL;
+        return 0;
+    }
+
+    idx->entries = NULL;
+    idx->count = 0;
+
+    char hash_hex[65];
+    char path[256];
+    unsigned int mode;
+    long mtime;
+    long size;
+
+    while (fscanf(f, "%o %64s %ld %ld %255s",
+                  &mode, hash_hex, &mtime, &size, path) == 5) {
+
+        idx->entries = realloc(idx->entries,
+            (idx->count + 1) * sizeof(IndexEntry));
+
+        IndexEntry *e = &idx->entries[idx->count++];
+
+        e->mode = mode;
+        e->mtime_sec = mtime;
+        e->size = size;
+
+        strncpy(e->path, path, sizeof(e->path) - 1);
+        e->path[sizeof(e->path) - 1] = '\0';
+
+        hex_to_hash(hash_hex, &e->hash);
+    }
+
+    fclose(f);
+    return 0;
 }
 
 // Save the index to .pes/index atomically.
