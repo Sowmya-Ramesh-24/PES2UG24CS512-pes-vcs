@@ -182,10 +182,40 @@ int index_load(Index *idx) {
 //
 // Returns 0 on success, -1 on error.
 int index_save(const Index *index) {
-    // TODO: Implement atomic index saving
-    // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    char temp_path[] = ".pes/index.tmp";
+
+    FILE *f = fopen(temp_path, "w");
+    if (!f) return -1;
+
+    for (int i = 0; i < index->count; i++) {
+        char hash_hex[65];
+        hash_to_hex(&index->entries[i].hash, hash_hex);
+
+        fprintf(f, "%o %s %ld %ld %s\n",
+        index->entries[i].mode,
+        hash_hex,
+        (long)index->entries[i].mtime_sec,
+        (long)index->entries[i].size,
+        index->entries[i].path);
+        }
+
+    fflush(f);
+    fsync(fileno(f));
+    fclose(f);
+
+    // Atomic replace
+    if (rename(temp_path, ".pes/index") != 0) {
+        return -1;
+    }
+
+    // fsync directory (VERY IMPORTANT)
+    int dir_fd = open(".pes", O_RDONLY);
+    if (dir_fd >= 0) {
+        fsync(dir_fd);
+        close(dir_fd);
+    }
+
+    return 0;
 }
 
 // Stage a file for the next commit.
