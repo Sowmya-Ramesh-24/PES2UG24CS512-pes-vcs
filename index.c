@@ -203,12 +203,12 @@ int index_save(const Index *index) {
     fsync(fileno(f));
     fclose(f);
 
-    // Atomic replace
+    
     if (rename(temp_path, ".pes/index") != 0) {
         return -1;
     }
 
-    // fsync directory (VERY IMPORTANT)
+  
     int dir_fd = open(".pes", O_RDONLY);
     if (dir_fd >= 0) {
         fsync(dir_fd);
