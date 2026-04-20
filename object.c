@@ -99,6 +99,17 @@ if (type == OBJ_BLOB) type_str = "blob";
 else if (type == OBJ_TREE) type_str = "tree";
 else if (type == OBJ_COMMIT) type_str = "commit";
 else return -1;
+char header[64];
+int header_len = snprintf(header, sizeof(header), "%s %zu", type_str, len);
+
+size_t total_size = header_len + 1 + len;
+
+unsigned char *buffer = malloc(total_size);
+if (!buffer) return -1;
+
+memcpy(buffer, header, header_len);
+buffer[header_len] = '\0';
+memcpy(buffer + header_len + 1, data, len);
     // TODO: Implement
     (void)type; (void)data; (void)len; (void)id_out;
     return -1;
