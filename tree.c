@@ -152,10 +152,37 @@ static int write_tree_level(const IndexEntry *entries, int count,
             te->name[sizeof(te->name) - 1] = '\0';
 
             i++;
-        } else {
-            // ignore directories for now (Commit 5)
-            i++;
-        }
+        } 
+        else {
+    size_t dir_name_len = slash - rel;
+
+    char dir_name[256];
+    memcpy(dir_name, rel, dir_name_len);
+    dir_name[dir_name_len] = '\0';
+
+    char sub_prefix[512];
+    snprintf(sub_prefix, sizeof(sub_prefix), "%s%s/", prefix, dir_name);
+
+    int sub_start = i;
+    while (i < count &&
+           strncmp(entries[i].path, sub_prefix, strlen(sub_prefix)) == 0) {
+        i++;
+    }
+
+    int sub_count = i - sub_start;
+
+    ObjectID sub_id;
+    if (write_tree_level(&entries[sub_start], sub_count,
+                         sub_prefix, &sub_id) != 0) {
+        return -1;
+    }
+
+    TreeEntry *te = &tree.entries[tree.count++];
+    te->mode = MODE_DIR;
+    te->hash = sub_id;
+    strncpy(te->name, dir_name, sizeof(te->name) - 1);
+te->name[sizeof(te->name) - 1] = '\0';
+}
     }
 
     return 0;
