@@ -116,9 +116,61 @@ if (object_exists(id_out)) {
     free(buffer);
     return 0;
 }
-    // TODO: Implement
-    
+ char path[512];
+object_path(id_out, path, sizeof(path));
+
+// create directory path
+char dir[512];
+snprintf(dir, sizeof(dir), "%s", path);
+char *slash = strrchr(dir, '/');
+if (!slash) {
+    free(buffer);
     return -1;
+}
+*slash = '\0';
+
+// create shard directory
+mkdir(dir, 0755);
+
+// temp file path
+char temp_path[512];
+snprintf(temp_path, sizeof(temp_path), "%s.tmp", path);
+
+// open temp file
+int fd = open(temp_path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+if (fd < 0) {
+    free(buffer);
+    return -1;
+}
+
+// write data
+if (write(fd, buffer, total_size) != (ssize_t)total_size) {
+    close(fd);
+    free(buffer);
+    return -1;
+}
+
+// flush to disk
+fsync(fd);
+close(fd);
+
+// atomic rename
+if (rename(temp_path, path) != 0) {
+    free(buffer);
+    return -1;
+}
+
+// sync directory
+int dfd = open(dir, O_RDONLY);
+if (dfd >= 0) {
+    fsync(dfd);
+    close(dfd);
+}
+
+free(buffer);
+return 0;
+   
+ 
 }
 
 // Read an object from the store.
