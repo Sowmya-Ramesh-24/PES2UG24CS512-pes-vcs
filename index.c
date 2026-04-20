@@ -139,11 +139,9 @@ int index_load(Index *idx) {
 
     if (!f) {
         idx->count = 0;
-        idx->entries = NULL;
         return 0;
     }
 
-    idx->entries = NULL;
     idx->count = 0;
 
     char hash_hex[65];
@@ -155,8 +153,7 @@ int index_load(Index *idx) {
     while (fscanf(f, "%o %64s %ld %ld %255s",
                   &mode, hash_hex, &mtime, &size, path) == 5) {
 
-        idx->entries = realloc(idx->entries,
-            (idx->count + 1) * sizeof(IndexEntry));
+        if (idx->count >= MAX_INDEX_ENTRIES) break;
 
         IndexEntry *e = &idx->entries[idx->count++];
 
