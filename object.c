@@ -110,8 +110,14 @@ if (!buffer) return -1;
 memcpy(buffer, header, header_len);
 buffer[header_len] = '\0';
 memcpy(buffer + header_len + 1, data, len);
+compute_hash(buffer, total_size, id_out);
+
+if (object_exists(id_out)) {
+    free(buffer);
+    return 0;
+}
     // TODO: Implement
-    (void)type; (void)data; (void)len; (void)id_out;
+    
     return -1;
 }
 
