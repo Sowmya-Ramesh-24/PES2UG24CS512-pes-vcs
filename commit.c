@@ -203,6 +203,30 @@ if (tree_from_index(&tree_id) != 0) {
     fprintf(stderr, "error: failed to write tree\n");
     return -1;
 }
+if (commit_id_out) {
+        memset(commit_id_out, 0, sizeof(ObjectID));
+    }
+   Commit c;
+memset(&c, 0, sizeof(Commit));
+
+// tree
+c.tree = tree_id;
+
+// parent (if exists)
+if (head_read(&c.parent) == 0) {
+    c.has_parent = 1;
+} else {
+    c.has_parent = 0;
+}
+
+// author
+snprintf(c.author, sizeof(c.author), "%s", pes_author());
+
+// timestamp
+c.timestamp = (uint64_t)time(NULL);
+
+// message
+snprintf(c.message, sizeof(c.message), "%s", message);
     // TODO: Implement commit creation
     // (See Lab Appendix for logical steps)
     return 0;
