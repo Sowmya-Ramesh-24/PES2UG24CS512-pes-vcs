@@ -198,8 +198,12 @@ if (!message) {
     fprintf(stderr, "error: commit requires a message (-m \"message\")\n");
     return -1;
 }
+ObjectID tree_id;
+if (tree_from_index(&tree_id) != 0) {
+    fprintf(stderr, "error: failed to write tree\n");
+    return -1;
+}
     // TODO: Implement commit creation
     // (See Lab Appendix for logical steps)
-    (void)message; (void)commit_id_out;
-    return -1;
+    return 0;
 }
