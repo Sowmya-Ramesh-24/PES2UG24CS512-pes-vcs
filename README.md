@@ -6,9 +6,10 @@
 **Platform:** Ubuntu 22.04
 
 ---
+| Name | SRN |
+|------|-----|
+| Sowmya Ramesh | PES2UG24CS512 |
 
-| Name : | Sowmya Ramesh |
-| SRN:   | PES2UG24CS512 |
 
 ---
 
