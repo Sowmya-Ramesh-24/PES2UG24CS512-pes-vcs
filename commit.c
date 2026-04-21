@@ -229,5 +229,12 @@ c.timestamp = (uint64_t)time(NULL);
 snprintf(c.message, sizeof(c.message), "%s", message);
     // TODO: Implement commit creation
     // (See Lab Appendix for logical steps)
+void *data;
+size_t len;
+
+if (commit_serialize(&c, &data, &len) != 0) {
+    fprintf(stderr, "error: failed to serialize commit\n");
+    return -1;
+}
     return 0;
 }
