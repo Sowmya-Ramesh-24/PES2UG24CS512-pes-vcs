@@ -203,9 +203,7 @@ if (tree_from_index(&tree_id) != 0) {
     fprintf(stderr, "error: failed to write tree\n");
     return -1;
 }
-if (commit_id_out) {
-        memset(commit_id_out, 0, sizeof(ObjectID));
-    }
+
    Commit c;
 memset(&c, 0, sizeof(Commit));
 
@@ -236,5 +234,25 @@ if (commit_serialize(&c, &data, &len) != 0) {
     fprintf(stderr, "error: failed to serialize commit\n");
     return -1;
 }
-    return 0;
+ObjectID commit_id;
+
+if (object_write(OBJ_COMMIT, data, len, &commit_id) != 0) {
+    fprintf(stderr, "error: failed to write commit object\n");
+    free(data);
+    return -1;
+}
+
+if (head_update(&commit_id) != 0) {
+    fprintf(stderr, "error: failed to update HEAD\n");
+    free(data);
+    return -1;
+}
+
+if (commit_id_out) {
+    *commit_id_out = commit_id;
+}
+
+free(data);
+return 0;
+    
 }
